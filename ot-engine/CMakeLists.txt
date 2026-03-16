@@ -5,8 +5,8 @@ include_directories(include)
 
 set(CMAKE_CXX_STANDARD 17)
 
-file(GLOB SRC_CPP CONFIGURE_DEPENDS "src/*.cpp")
+file(GLOB SRC_CPP CONFIGURE_DEPENDS "src/*.cpp" "ffi/*.cpp")
 
-add_executable(ot-engine ${SRC_CPP})
+add_library(ot-engine-lib STATIC ${SRC_CPP})
 
-target_include_directories(ot-engine PRIVATE include)
+target_include_directories(ot-engine-lib PRIVATE include)
