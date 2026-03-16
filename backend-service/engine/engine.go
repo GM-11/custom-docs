@@ -70,6 +70,21 @@ func cOperationToGo(cOp C.OperationC) Operation {
 	return goOp
 }
 
+func PerformTransformation(op1, op2 Operation) Operation {
+	cOp1 := goOperationToC(op1)
+	cOp2 := goOperationToC(op2)
+
+	var flag C.int = 2
+	result := C.performTransformation(&cOp1, &cOp2, &flag)
+
+	defer C.free(unsafe.Pointer(result.clientId))
+	if result._type == INSERT {
+		defer C.free(unsafe.Pointer(*(**C.char)(unsafe.Pointer(&result.data))))
+	}
+
+	return cOperationToGo(*result)
+}
+
 func ApplyOperation(doc string, op Operation) string {
 
 	cDoc := C.CString(doc)
