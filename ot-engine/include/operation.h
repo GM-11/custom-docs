@@ -5,7 +5,7 @@
 #include <string>
 #include <variant>
 
-struct Operation {
+typedef struct Operation {
   OperationType type;
   int position;
   std::variant<InsertData, DeleteData> data; // string for add, int for delete
@@ -15,4 +15,4 @@ struct Operation {
   Operation(OperationType type, int position,
             std::variant<InsertData, DeleteData> data, int version,
             const std::string &clientId);
-};
+} Operation;

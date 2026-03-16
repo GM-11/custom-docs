@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-struct OperationC {
+typedef struct OperationC {
   int type;
   int position;
   int version;
@@ -13,7 +13,7 @@ struct OperationC {
     char *text;
     int length;
   } data;
-};
+} OperationC;
 
 OperationC *performTransformation(const OperationC *op1, const OperationC *op2,
                                   int *outsize);
