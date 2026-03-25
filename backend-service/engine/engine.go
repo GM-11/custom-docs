@@ -11,11 +11,11 @@ import (
 type OperationData interface{}
 
 type Operation struct {
-	Type     int
-	Position int
-	Version  int
-	ClientID string
-	Data     OperationData // can hold either string or int
+	Type     int           `json:"type"`
+	Position int           `json:"position"`
+	Version  int           `json:"version"`
+	ClientID string        `json:"clientId"`
+	Data     OperationData `json:"data"`
 }
 
 const (
@@ -36,6 +36,9 @@ func goOperationToC(goOp Operation) C.OperationC {
 
 	case int:
 		*(*C.int)(unsafe.Pointer(&op.data)) = C.int(v)
+
+	case float64:
+		*(*C.int)(unsafe.Pointer(&op.data)) = C.int(int(v))
 
 	default:
 		panic("unsupported data type")
@@ -63,26 +66,32 @@ func cOperationToGo(cOp C.OperationC) Operation {
 		panic("unsupported operation type")
 	}
 
-	if goOp.Type == INSERT {
+	return goOp
+}
+
+func freeCOperation(cOp C.OperationC, opType int) {
+	C.free(unsafe.Pointer(cOp.clientId))
+	if opType == INSERT {
 		C.free(unsafe.Pointer(*(**C.char)(unsafe.Pointer(&cOp.data))))
 	}
-
-	return goOp
 }
 
 func PerformTransformation(op1, op2 Operation) Operation {
 	cOp1 := goOperationToC(op1)
 	cOp2 := goOperationToC(op2)
 
+	defer C.free(unsafe.Pointer(cOp1.clientId))
+	defer C.free(unsafe.Pointer(cOp2.clientId))
+
 	var flag C.int = 2
 	result := C.performTransformation(&cOp1, &cOp2, &flag)
-
-	defer C.free(unsafe.Pointer(result.clientId))
-	if result._type == INSERT {
-		defer C.free(unsafe.Pointer(*(**C.char)(unsafe.Pointer(&result.data))))
+	if result == nil {
+		return op2
 	}
+	goResult := cOperationToGo(*result)
 
-	return cOperationToGo(*result)
+	freeCOperation(*result, int(result._type))
+	return goResult
 }
 
 func ApplyOperation(doc string, op Operation) string {
@@ -90,11 +99,10 @@ func ApplyOperation(doc string, op Operation) string {
 	cDoc := C.CString(doc)
 	defer C.freeDocument(cDoc)
 	cOp := goOperationToC(op)
-
+	defer freeCOperation(cOp, op.Type)
 	result := C.applyTransformations(cDoc, &cOp)
 
 	defer C.free(unsafe.Pointer(result))
-	defer C.free(unsafe.Pointer(cOp.clientId))
 	return C.GoString(result)
 
 }
@@ -105,18 +113,12 @@ func TransformPipeline(operations []Operation, incomingOperation Operation) []Op
 	}
 	defer func() {
 		for i, op := range operations {
-			if op.Type == INSERT {
-				C.free(unsafe.Pointer(*(**C.char)(unsafe.Pointer(&cOps[i].data))))
-			}
-			C.free(unsafe.Pointer(cOps[i].clientId))
+			freeCOperation(cOps[i], op.Type)
 		}
 	}()
 
 	cIncomingOp := goOperationToC(incomingOperation)
-	defer C.free(unsafe.Pointer(cIncomingOp.clientId))
-	if incomingOperation.Type == INSERT {
-		defer C.free(unsafe.Pointer(*(**C.char)(unsafe.Pointer(&cIncomingOp.data))))
-	}
+	defer freeCOperation(cIncomingOp, incomingOperation.Type)
 
 	opsCount := C.int(len(operations))
 	resultCount := C.int(0)
