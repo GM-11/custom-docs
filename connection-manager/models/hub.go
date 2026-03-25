@@ -18,8 +18,7 @@ func (h *Hub) Run() {
 		case client := <-h.Unregister: // disconnection
 			delete(h.ClientMap, client.ClientId)
 		case channelData := <-h.IncomingChannel: // operation on the document
-
-			incomingOperation := channelData.Operation
+			incomingOperation := channelData.Payload.(OperationPayload).Operation
 			for _, op := range h.DocumentState.Operations[channelData.Version:] {
 				incomingOperation = engine.PerformTransformation(incomingOperation, op)
 			}
@@ -31,8 +30,9 @@ func (h *Hub) Run() {
 			for _, client := range h.ClientMap {
 				if client.ClientId != channelData.ClientId {
 					client.OutboundChannel <- ChannelData{
-						Operation: incomingOperation,
-						ClientId:  client.ClientId,
+						Payload:  MessagePayload(OperationPayload{Operation: incomingOperation}),
+						ClientId: client.ClientId,
+						Version:  h.DocumentState.Version,
 					}
 				}
 			}

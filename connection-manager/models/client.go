@@ -28,9 +28,9 @@ func (c *Client) ReadPump() {
 		}
 
 		c.Hub.IncomingChannel <- ChannelData{
-			Operation: operation,
-			ClientId:  operation.ClientID,
-			Version:   operation.Version,
+			Payload:  MessagePayload(OperationPayload{Operation: operation}),
+			ClientId: operation.ClientID,
+			Version:  operation.Version,
 		}
 	}
 
