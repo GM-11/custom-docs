@@ -13,11 +13,11 @@ type Hub struct {
 func (h *Hub) Run() {
 	for {
 		select {
-		case client := <-h.Register:
+		case client := <-h.Register: // new connection
 			h.ClientMap[client.ClientId] = client
-		case client := <-h.Unregister:
+		case client := <-h.Unregister: // disconnection
 			delete(h.ClientMap, client.ClientId)
-		case channelData := <-h.IncomingChannel:
+		case channelData := <-h.IncomingChannel: // operation on the document
 
 			incomingOperation := channelData.Operation
 			for _, op := range h.DocumentState.Operations[channelData.Version:] {
