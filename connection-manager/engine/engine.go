@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-type OperationData interface{}
+type OperationData any // string for insert, int for delete
 
 type Operation struct {
 	Type     int           `json:"type"`
