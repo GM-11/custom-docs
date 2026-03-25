@@ -62,6 +62,14 @@ func (manager *HubManager) ConnectToDocument(clientId, hubId string, conn *webso
 
 	hub.Register <- &client
 	go client.WritePump()
+	client.OutboundChannel <- ChannelData{
+		Payload: MessagePayload(DocumentState{
+			Version:    hub.DocumentState.Version,    // version stored in DB
+			Content:    hub.DocumentState.Content,    // version stored in DB
+			Operations: hub.DocumentState.Operations, // operations stored in DB
+			Id:         hubId,
+		}),
+	}
 	client.ReadPump()
 
 }
