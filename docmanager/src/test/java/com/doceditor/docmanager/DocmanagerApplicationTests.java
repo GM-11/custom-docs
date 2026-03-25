@@ -1,10 +1,10 @@
-package com.doceditor.document_manager;
+package com.doceditor.docmanager;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DocumentManagerApplicationTests {
+class DocmanagerApplicationTests {
 
 	@Test
 	void contextLoads() {
