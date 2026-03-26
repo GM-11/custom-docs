@@ -2,9 +2,11 @@ package com.doceditor.docmanager.kafka;
 
 import com.doceditor.docmanager.kafka.dto.OperationMessage;
 import com.doceditor.docmanager.kafka.dto.SnapshotMessage;
+import com.doceditor.docmanager.services.DocumentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -14,7 +16,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class KafkaMessageListener {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private DocumentService documentService;
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaMessageListener.class);
 
@@ -26,12 +32,13 @@ public class KafkaMessageListener {
             String messageType = jsonNode.get("type").asText();
 
             if ("operation".equals(messageType)) {
-                OperationMessage opMsg = objectMapper.readValue(message, OperationMessage.class);
+                OperationMessage opMsg = objectMapper.treeToValue(jsonNode, OperationMessage.class);
                 logger.info("Processing operation: {}", opMsg.getOperationId());
-                // handleOperation(opMsg);
+                documentService.processOperation(opMsg);
             } else if ("snapshot".equals(messageType)) {
-                SnapshotMessage snapMsg = objectMapper.readValue(message, SnapshotMessage.class);
+                SnapshotMessage snapMsg = objectMapper.treeToValue(jsonNode, SnapshotMessage.class);
                 logger.info("Processing snapshot for document: {}", snapMsg.getDocumentId());
+                documentService.processSnapshot(snapMsg);
             } else {
                 logger.warn("Unknown message type: {}", messageType);
             }
