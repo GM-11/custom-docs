@@ -1,17 +1,19 @@
 package com.doceditor.docmanager.entity;
 
 import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "snapshots", indexes = { @Index(name = "idx_snapshots_document_id", columnList = "document_id") })
+@Table(name = "snapshots", indexes = {
+        @Index(name = "idx_snapshots_document_id", columnList = "document_id")
+})
 public class Snapshot {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,6 +31,20 @@ public class Snapshot {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public Snapshot() {
+    }
+
+    public Snapshot(String documentId, String s3Url, String basedOnOperationId) {
+        this.documentId = documentId;
+        this.s3Url = s3Url;
+        this.basedOnOperationId = basedOnOperationId;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
     public String getId() {
         return id;
@@ -80,5 +96,4 @@ public class Snapshot {
                 ", createdAt=" + createdAt +
                 '}';
     }
-
 }

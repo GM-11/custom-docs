@@ -1,26 +1,29 @@
 package com.doceditor.docmanager.entity;
 
 import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.Table;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "operations", indexes = {
         @Index(name = "idx_operations_document_id", columnList = "document_id"),
-        @Index(name = "idx_operations_lamport_clock", columnList = "document_id, lamport_clock")
+        @Index(name = "idx_operations_lamport_clock", columnList = "document_id, lamport_clock"),
+        @Index(name = "idx_operations_operation_id", columnList = "operation_id")
 })
 public class Operations {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private String id;
+
+    @Column(name = "operation_id", nullable = false, unique = true)
+    private String operationId;
 
     @Column(name = "document_id", nullable = false)
     private String documentId;
@@ -31,18 +34,26 @@ public class Operations {
     @Column(name = "lamport_clock", nullable = false)
     private Long lamportClock;
 
-    @Column(name = "operation_data", nullable = false, unique = true)
+    @Column(name = "operation_data", nullable = false)
     private String operationData;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public Operations(String documentId, String userId, Long lamportClock, String operationData) {
+    public Operations() {
+    }
+
+    public Operations(String operationId, String documentId, String userId, Long lamportClock, String operationData) {
+        this.operationId = operationId;
         this.documentId = documentId;
         this.userId = userId;
         this.lamportClock = lamportClock;
         this.operationData = operationData;
-        this.createdAt = LocalDateTime.now();
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
     }
 
     public String getId() {
@@ -51,6 +62,14 @@ public class Operations {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getOperationId() {
+        return operationId;
+    }
+
+    public void setOperationId(String operationId) {
+        this.operationId = operationId;
     }
 
     public String getDocumentId() {
@@ -97,6 +116,7 @@ public class Operations {
     public String toString() {
         return "Operations{" +
                 "id='" + id + '\'' +
+                ", operationId='" + operationId + '\'' +
                 ", documentId='" + documentId + '\'' +
                 ", userId='" + userId + '\'' +
                 ", lamportClock=" + lamportClock +
