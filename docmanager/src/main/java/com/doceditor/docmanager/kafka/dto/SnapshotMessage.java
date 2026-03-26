@@ -6,19 +6,21 @@ public class SnapshotMessage {
     private String documentString;
     private Long lamportClock;
     private Long timestamp;
+    private String operationId;
 
     public SnapshotMessage() {
     }
 
-    public SnapshotMessage(String documentId, String documentString, Long lamportClock, Long timestamp) {
+    public SnapshotMessage(String documentId, String documentString, Long lamportClock, Long timestamp,
+            String operationId) {
         this.type = "snapshot";
         this.documentId = documentId;
         this.documentString = documentString;
         this.lamportClock = lamportClock;
         this.timestamp = timestamp;
+        this.operationId = operationId;
     }
 
-    // getters and setters
     public String getType() {
         return type;
     }
@@ -57,5 +59,13 @@ public class SnapshotMessage {
 
     public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getOperationId() {
+        return operationId;
+    }
+
+    public void setOperationId(String operationId) {
+        this.operationId = operationId;
     }
 }
