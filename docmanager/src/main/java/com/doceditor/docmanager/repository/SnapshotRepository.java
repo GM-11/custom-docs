@@ -7,6 +7,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface SnapshotRepository extends JpaRepository<Snapshot, String> {
-    @Query("SELECT s FROM snapshot s WHERE s.documentId = :documentId ORDER BY s.createdAt DESC LIMIT 1")
+    @Query(value = "SELECT * FROM snapshots WHERE document_id = :documentId ORDER BY created_at DESC LIMIT 1", nativeQuery = true)
     Optional<Snapshot> findLatestSnapshotByDocumentId(@Param("documentId") String documentId);
 }
