@@ -12,7 +12,7 @@ public interface OperationRepository extends JpaRepository<Operations, String> {
 
     List<Operations> findByDocumentIdOrderByLamportClockAsc(String documentId);
 
-    @Query(value = "SELECT o FROM operations o WHERE o.documentId = :documentId AND o.lamportClock > :lamportClock ORDER BY o.lamportClock ASC", nativeQuery = true)
+    @Query(value = "SELECT * FROM operations WHERE o.documentId = :documentId AND o.lamportClock > :lamportClock ORDER BY o.lamportClock ASC", nativeQuery = true)
     List<Operations> findOperationsSinceSnapshot(@Param("documentId") String documentId,
             @Param("lamportClock") Long lamportClock);
 }
