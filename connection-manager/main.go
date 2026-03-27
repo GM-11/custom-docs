@@ -6,8 +6,10 @@ import (
 	"log"
 	"net/http"
 
+	"custom_docs.com/m/v2/messages"
 	"custom_docs.com/m/v2/models"
 	"github.com/gorilla/websocket"
+	"github.com/segmentio/kafka-go"
 )
 
 var upgrader = websocket.Upgrader{
@@ -78,7 +80,18 @@ func getDocumentStateHandler(manager *models.HubManager) func(w http.ResponseWri
 }
 func main() {
 	mux := http.NewServeMux()
-	manager := models.HubManager{Hubs: make(map[string]*models.Hub)}
+
+	kafkaProducer := messages.KafkaProducer{
+		Writer: &kafka.Writer{
+			Addr:     kafka.TCP("localhost:9092"),
+			Topic:    "document-ops",
+			Balancer: &kafka.LeastBytes{},
+		},
+	}
+	defer kafkaProducer.Close()
+	manager := models.HubManager{
+		Hubs:     make(map[string]*models.Hub),
+		Producer: &kafkaProducer}
 	mux.HandleFunc("POST /documents", createNewDocumentHandler(&manager))
 	mux.HandleFunc("GET /ws", connectToDocumentHandler(&manager))
 	mux.HandleFunc("GET /document", getDocumentStateHandler(&manager))
