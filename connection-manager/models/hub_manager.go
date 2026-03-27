@@ -5,13 +5,15 @@ import (
 	"sync"
 
 	"custom_docs.com/m/v2/engine"
+	"custom_docs.com/m/v2/messages"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 type HubManager struct {
-	Hubs map[string]*Hub
-	mu   sync.Mutex
+	Hubs     map[string]*Hub
+	mu       sync.Mutex
+	Producer *messages.KafkaProducer
 }
 
 func (manager *HubManager) CreateNewDocument(clientId string) (string, error) {
@@ -26,13 +28,14 @@ func (manager *HubManager) CreateNewDocument(clientId string) (string, error) {
 		Unregister:      make(chan *Client),
 		ClientMap:       make(map[string]*Client),
 		DocumentState:   DocumentState{Content: "", Version: 0, Operations: []engine.Operation{}, Id: hubId},
+		LamportClock:    0,
 	}
 
 	manager.Hubs[hubId] = &newHub
 	manager.mu.Unlock()
 
 	fmt.Println("Client connected!")
-	go newHub.Run()
+	go manager.Hubs[hubId].Run(manager.Producer)
 
 	return hubId, nil
 }
