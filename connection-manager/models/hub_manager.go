@@ -88,3 +88,32 @@ func (manager *HubManager) GetDocumentState(hubId string) (DocumentState, error)
 
 	return hub.DocumentState, nil
 }
+
+func (manager *HubManager) LoadExistingDocument(hubId string) error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
+	if _, exists := manager.Hubs[hubId]; exists {
+		return nil
+	}
+
+	docText, lastClock, err := recoverDocumentState(hubId)
+
+	if err != nil {
+		return fmt.Errorf("failed to recover document state: %w", err)
+	}
+
+	newHub := Hub{
+		IncomingChannel: make(chan ChannelData),
+		Register:        make(chan *Client),
+		Unregister:      make(chan *Client),
+		ClientMap:       make(map[string]*Client),
+		DocumentState:   DocumentState{Content: docText, Version: 0, Operations: []engine.Operation{}, Id: hubId},
+		LamportClock:    lastClock,
+	}
+
+	manager.Hubs[hubId] = &newHub
+	go manager.Hubs[hubId].Run(manager.Producer)
+
+	return nil
+}
