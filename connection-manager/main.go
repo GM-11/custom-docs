@@ -22,6 +22,7 @@ var upgrader = websocket.Upgrader{
 func createNewDocumentHandler(manager *models.HubManager) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clientId := r.URL.Query().Get("clientId")
+		title := r.URL.Query().Get("title")
 		if clientId == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"error": "clientId is required"})
@@ -29,7 +30,7 @@ func createNewDocumentHandler(manager *models.HubManager) func(w http.ResponseWr
 		}
 		// conn, err := upgrader.Upgrade(w, r, nil)
 
-		hubId, err := manager.CreateNewDocument(clientId)
+		hubId, err := manager.CreateNewDocument(clientId, title)
 		if err != nil {
 			log.Println("Error creating new document:", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -50,6 +51,17 @@ func connectToDocumentHandler(manager *models.HubManager) func(w http.ResponseWr
 			json.NewEncoder(w).Encode(map[string]string{"error": "clientId and hubId are required"})
 			return
 		}
+
+		if !manager.HubExists(hubId) {
+			err := manager.LoadExistingDocument(hubId)
+			if err != nil {
+				log.Println("Failed to recover document:", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]string{"error": "failed to recover document state"})
+				return
+			}
+		}
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Println("Upgrade error:", err)

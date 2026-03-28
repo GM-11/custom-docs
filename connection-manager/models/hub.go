@@ -16,6 +16,7 @@ type Hub struct {
 	Register        chan *Client
 	Unregister      chan *Client
 	LamportClock    int64
+	Done            chan struct{}
 }
 
 func (h *Hub) Run(kafkaProducer *messages.KafkaProducer) {
@@ -25,6 +26,12 @@ func (h *Hub) Run(kafkaProducer *messages.KafkaProducer) {
 			h.ClientMap[client.ClientId] = client
 		case client := <-h.Unregister: // disconnection
 			delete(h.ClientMap, client.ClientId)
+
+			if len(h.ClientMap) == 0 {
+				close(h.Done)
+				return
+			}
+
 		case channelData := <-h.IncomingChannel: // operation on the document
 			incomingOperation := channelData.Payload.(OperationPayload).Operation
 			for _, op := range h.DocumentState.Operations[channelData.Version:] {

@@ -16,11 +16,14 @@ type HubManager struct {
 	Producer *messages.KafkaProducer
 }
 
-func (manager *HubManager) CreateNewDocument(clientId string) (string, error) {
+func (manager *HubManager) CreateNewDocument(clientId, title string) (string, error) {
 	manager.mu.Lock()
 	hubId := uuid.New().String()
 
 	// TODO: create this new id in DB
+	// manager.PublishCreateDocument()
+
+	manager.Producer.PublishCreateDocument(messages.CreateDocumentMessage{UserId: clientId, Title: title})
 
 	newHub := Hub{
 		IncomingChannel: make(chan ChannelData),
@@ -29,10 +32,16 @@ func (manager *HubManager) CreateNewDocument(clientId string) (string, error) {
 		ClientMap:       make(map[string]*Client),
 		DocumentState:   DocumentState{Content: "", Version: 0, Operations: []engine.Operation{}, Id: hubId},
 		LamportClock:    0,
+		Done:            make(chan struct{}),
 	}
 
 	manager.Hubs[hubId] = &newHub
 	manager.mu.Unlock()
+
+	go func() {
+		<-newHub.Done
+		manager.RemoveHub(hubId)
+	}()
 
 	fmt.Println("Client connected!")
 	go manager.Hubs[hubId].Run(manager.Producer)
@@ -74,7 +83,12 @@ func (manager *HubManager) ConnectToDocument(clientId, hubId string, conn *webso
 		}),
 	}
 	client.ReadPump()
+}
 
+func (manager *HubManager) RemoveHub(hubId string) {
+	manager.mu.Lock()
+	delete(manager.Hubs, hubId)
+	manager.mu.Unlock()
 }
 
 func (manager *HubManager) GetDocumentState(hubId string) (DocumentState, error) {
@@ -110,10 +124,23 @@ func (manager *HubManager) LoadExistingDocument(hubId string) error {
 		ClientMap:       make(map[string]*Client),
 		DocumentState:   DocumentState{Content: docText, Version: 0, Operations: []engine.Operation{}, Id: hubId},
 		LamportClock:    lastClock,
+		Done:            make(chan struct{}),
 	}
+
+	go func() {
+		<-newHub.Done
+		manager.RemoveHub(hubId)
+	}()
 
 	manager.Hubs[hubId] = &newHub
 	go manager.Hubs[hubId].Run(manager.Producer)
 
 	return nil
+}
+
+func (manager *HubManager) HubExists(hubId string) bool {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+	_, exists := manager.Hubs[hubId]
+	return exists
 }
