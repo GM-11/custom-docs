@@ -14,16 +14,12 @@ import jakarta.persistence.Table;
 @Table(name = "operations", indexes = {
         @Index(name = "idx_operations_document_id", columnList = "document_id"),
         @Index(name = "idx_operations_lamport_clock", columnList = "document_id, lamport_clock"),
-        @Index(name = "idx_operations_operation_id", columnList = "operation_id")
 })
 public class Operations {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private String id;
-
-    @Column(name = "operation_id", nullable = false, unique = true)
-    private String operationId;
 
     @Column(name = "document_id", nullable = false)
     private String documentId;
@@ -43,8 +39,8 @@ public class Operations {
     public Operations() {
     }
 
-    public Operations(String operationId, String documentId, String userId, Long lamportClock, String operationData) {
-        this.operationId = operationId;
+    public Operations(String id, String documentId, String userId, Long lamportClock, String operationData) {
+        this.id = id;
         this.documentId = documentId;
         this.userId = userId;
         this.lamportClock = lamportClock;
@@ -62,14 +58,6 @@ public class Operations {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getOperationId() {
-        return operationId;
-    }
-
-    public void setOperationId(String operationId) {
-        this.operationId = operationId;
     }
 
     public String getDocumentId() {
@@ -116,7 +104,6 @@ public class Operations {
     public String toString() {
         return "Operations{" +
                 "id='" + id + '\'' +
-                ", operationId='" + operationId + '\'' +
                 ", documentId='" + documentId + '\'' +
                 ", userId='" + userId + '\'' +
                 ", lamportClock=" + lamportClock +
