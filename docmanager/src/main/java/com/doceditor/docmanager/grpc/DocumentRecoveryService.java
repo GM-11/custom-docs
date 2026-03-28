@@ -55,7 +55,7 @@ public class DocumentRecoveryService extends DocumentRecoveryServiceGrpc.Documen
 
                 DocumentRecoveryProto.Operation protoOp = DocumentRecoveryProto.Operation
                         .newBuilder()
-                        .setOperationId(op.getOperationId())
+                        .setOperationId(op.getId())
                         .setLamportClock(op.getLamportClock())
                         .setPosition(data.get("position").asInt())
                         .setType(data.get("type").asText())
@@ -66,7 +66,7 @@ public class DocumentRecoveryService extends DocumentRecoveryServiceGrpc.Documen
 
             } catch (Exception e) {
                 System.err.println(
-                        "Failed to parse operation_data for op: " + op.getOperationId() + " — " + e.getMessage());
+                        "Failed to parse operation_data for op: " + op.getId() + " — " + e.getMessage());
             }
         }
 
