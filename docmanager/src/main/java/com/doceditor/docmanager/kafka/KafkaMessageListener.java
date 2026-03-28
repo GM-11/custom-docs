@@ -1,5 +1,6 @@
 package com.doceditor.docmanager.kafka;
 
+import com.doceditor.docmanager.kafka.dto.NewDocumentMessage;
 import com.doceditor.docmanager.kafka.dto.OperationMessage;
 import com.doceditor.docmanager.kafka.dto.SnapshotMessage;
 import com.doceditor.docmanager.services.DocumentService;
@@ -39,6 +40,10 @@ public class KafkaMessageListener {
                 SnapshotMessage snapMsg = objectMapper.treeToValue(jsonNode, SnapshotMessage.class);
                 logger.info("Processing snapshot for document: {}", snapMsg.getDocumentId());
                 documentService.processSnapshot(snapMsg);
+            } else if ("new_document".equals(messageType)) {
+                NewDocumentMessage newDocMsg = objectMapper.treeToValue(jsonNode, NewDocumentMessage.class);
+                logger.info("Processing creating new document");
+                documentService.createNewDocument(newDocMsg);
             } else {
                 logger.warn("Unknown message type: {}", messageType);
             }
