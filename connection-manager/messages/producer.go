@@ -36,6 +36,18 @@ func (kp *KafkaProducer) PublishSnapshot(msg SnapshotMessage) error {
 	})
 }
 
+func (kp *KafkaProducer) PublishCreateDocument(msg CreateDocumentMessage) error {
+	messageBytes, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	return kp.Writer.WriteMessages(context.Background(), kafka.Message{
+		Key:   []byte(msg.UserId),
+		Value: messageBytes,
+	})
+}
+
 func (kp *KafkaProducer) Close() error {
 	return kp.Writer.Close()
 }
