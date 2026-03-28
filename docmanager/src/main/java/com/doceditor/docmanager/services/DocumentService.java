@@ -1,7 +1,9 @@
 package com.doceditor.docmanager.services;
 
+import com.doceditor.docmanager.entity.Documents;
 import com.doceditor.docmanager.entity.Operations;
 import com.doceditor.docmanager.entity.Snapshot;
+import com.doceditor.docmanager.kafka.dto.NewDocumentMessage;
 import com.doceditor.docmanager.kafka.dto.OperationMessage;
 import com.doceditor.docmanager.kafka.dto.SnapshotMessage;
 import com.doceditor.docmanager.repository.DocumentsAccessRepository;
@@ -31,6 +33,15 @@ public class DocumentService {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentService.class);
 
+    public void createNewDocument(NewDocumentMessage message) {
+        try {
+            Documents d = new Documents(message.getUserId(), message.getTitle());
+            documentsRepository.save(d);
+        } catch (Exception e) {
+            logger.warn("Error creating new document: {}", e);
+        }
+    }
+
     public void processOperation(OperationMessage message) {
         try {
 
@@ -39,7 +50,7 @@ public class DocumentService {
                 return;
             }
 
-            if (operationRepository.findByOperationId(message.getOperationId()).isPresent()) {
+            if (operationRepository.findById(message.getOperationId()).isPresent()) {
                 logger.warn("Duplicate operation received with ID: {}", message.getOperationId());
                 return;
             }
@@ -59,7 +70,6 @@ public class DocumentService {
             /// TODO: write document to s3
             String documentPath = "/local/" + message.getDocumentId();
             Snapshot s = new Snapshot(message.getDocumentId(), documentPath, message.getOperationId());
-
 
             snapshotRepository.save(s);
         } catch (Exception e) {
