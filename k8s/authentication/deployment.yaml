@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-service
+  labels:
+    app: authentication-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentication-service
+  template:
+    metadata:
+      labels:
+        app: authentication-service
+    spec:
+      initContainers:
+            - name: debug
+              image: busybox
+              command: ['sh', '-c', 'echo DB_PASSWORD=$DB_PASSWORD']
+              env:
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: customdocs-secret
+                      key: DB_PASSWORD
+      containers:
+        - name: authentication-service
+          image: customdocsregistry.azurecr.io/authentication:latest
+          ports:
+            - containerPort: 8082
+              name: http
+              protocol: TCP
+          env:
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: customdocs-secret
+                  key: DB_USER
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: customdocs-config
+                  key: AUTH_DB_URL
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: customdocs-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: customdocs-secret
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: customdocs-secret
+                  key: JWT_SECRET

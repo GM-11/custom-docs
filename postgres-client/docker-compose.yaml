@@ -1,0 +1,39 @@
+services:
+  docmanager-postgres:
+    image: postgres:16
+    container_name: docmanager-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: docmanager
+    ports:
+      - "5432:5432"
+    volumes:
+      - docmanager-data:/var/lib/postgresql/data
+      - ./docmanager_schema.sql:/docker-entrypoint-initdb.d/docmanager_schema.sql
+    networks:
+      - postgres-network
+
+  auth-postgres:
+    image: postgres:16
+    container_name: auth-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: auth
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth-data:/var/lib/postgresql/data
+      - ./auth_schema.sql:/docker-entrypoint-initdb.d/auth_schema.sql
+    networks:
+      - postgres-network
+
+
+volumes:
+  docmanager-data:
+  auth-data:
+
+networks:
+  postgres-network:
+    driver: bridge

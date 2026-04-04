@@ -1,0 +1,43 @@
+services:
+  connection-manager:
+    build:
+      context: .
+      dockerfile: ./connection-manager/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./connection-manager/.env
+    networks:
+      - postgres-client_postgres-network
+      - kafka-client_kafka-net
+
+  authentication:
+    build:
+      context: ./authentication
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    env_file:
+      - ./authentication/.env
+    networks:
+      - postgres-client_postgres-network
+      - kafka-client_kafka-net
+
+  docmanager:
+    build:
+      context: .
+      dockerfile: ./docmanager/Dockerfile
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./docmanager/.env
+    networks:
+      - postgres-client_postgres-network
+      - kafka-client_kafka-net
+
+
+networks:
+  postgres-client_postgres-network:
+    external: true
+  kafka-client_kafka-net:
+    external: true

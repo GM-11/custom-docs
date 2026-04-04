@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "custom_docs.com/m/v2/grpc/document";
+option java_outer_classname = "DocumentRecoveryProto";
+option java_package = "com.doceditor.docmanager.grpc";
+
+service DocumentRecoveryService {
+  rpc GetLatestSnapshot(GetLatestSnapshotRequest) returns (GetLatestSnapshotResponse);
+  rpc GetOperationsSince(GetOperationsSinceRequest) returns (GetOperationsSinceResponse);
+}
+
+message GetLatestSnapshotRequest {
+  string document_id = 1;
+}
+
+message GetLatestSnapshotResponse {
+  string document_text = 1;
+  int64 lamport_clock = 2;
+  bool found = 3;
+}
+
+message GetOperationsSinceRequest {
+  string document_id = 1;
+  int64 from_clock = 2;
+}
+
+message GetOperationsSinceResponse {
+  repeated Operation operations = 1;
+}
+
+message Operation {
+  string operation_id = 1;
+  int64 lamport_clock = 2;
+  int32 position = 3;
+  string type = 4;
+  string text = 5;
+}

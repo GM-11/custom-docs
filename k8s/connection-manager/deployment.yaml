@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: connection-manager-service
+  labels:
+    app: connection-manager-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: connection-manager-service
+  template:
+    metadata:
+      labels:
+        app: connection-manager-service
+    spec:
+      initContainers:
+        - name: wait-for-auth
+          image: busybox
+          command: ['sh', '-c', 'until wget -q --spider http://authentication-service:8082/.well-known/jwks.json; do echo waiting for auth; sleep 3; done']
+
+      containers:
+        - name: connection-manager-service
+          image: customdocsregistry.azurecr.io/connection-manager:latest
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          env:
+            - name: KAFKA_BROKER
+              valueFrom:
+                configMapKeyRef:
+                  name: customdocs-config
+                  key: KAFKA_BROKER
+            - name: GRPC_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: customdocs-config
+                  key: GRPC_ENDPOINT
+            - name: DOCMANAGER_SERVICE_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: customdocs-config
+                  key: DOCMANAGER_SERVICE_ENDPOINT
+            - name: AUTHENTICATION_SERVICE_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: customdocs-config
+                  key: AUTH_SERVICE_ENDPOINT

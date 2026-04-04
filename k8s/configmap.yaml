@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: customdocs-config
+data:
+  AUTH_DB_URL: "jdbc:postgresql://20.124.120.200:5433/auth"
+  DOCMANAGER_DB_URL: "jdbc:postgresql://20.124.120.200:5432/docmanager"
+  KAFKA_BROKER: "20.124.120.200:9092"
+  GRPC_ENDPOINT: "docmanager-service:9090"
+  AUTH_SERVICE_ENDPOINT: "http://authentication-service:8082"
+  DOCMANAGER_SERVICE_ENDPOINT: "http://docmanager-service:8081"
+  AZURE_CONTAINER_NAME: "document-snapshot"

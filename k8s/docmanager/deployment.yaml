@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docmanager-service
+  labels:
+    app: docmanager-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docmanager-service
+  template:
+    metadata:
+      labels:
+        app: docmanager-service
+    spec:
+      containers:
+        - name: docmanager-service
+          image: customdocsregistry.azurecr.io/docmanager:latest
+          ports:
+            - containerPort: 8081
+              name: http
+              protocol: TCP
+            - containerPort: 9090
+              name: grpc
+              protocol: TCP
+          env:
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: customdocs-config
+                  key: KAFKA_BROKER
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: customdocs-secret
+                  key: DB_USER
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: customdocs-config
+                  key: DOCMANAGER_DB_URL
+            - name: KAFKA_BROKER
+              valueFrom:
+                configMapKeyRef:
+                  name: customdocs-config
+                  key: KAFKA_BROKER
+            - name: AZURE_CONTAINER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: customdocs-config
+                  key: AZURE_CONTAINER_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: customdocs-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: customdocs-secret
+                  key: DB_PASSWORD
+            - name: AZURE_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: customdocs-secret
+                  key: AZURE_CONNECTION_STRING

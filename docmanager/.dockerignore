@@ -1,0 +1,7 @@
+.env
+_obj/
+authentication/
+docmanager/
+frontend/
+kafka-client/
+proto/
