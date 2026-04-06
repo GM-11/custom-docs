@@ -5,8 +5,11 @@ export const ACCESS_TOKEN_KEY = "access_token";
 export const REFRESH_TOKEN_KEY = "refresh_token";
 export const USER_KEY = "user";
 
+const AUTH_API_BASE_URL =
+  import.meta.env.VITE_AUTH_API_BASE_URL ?? "http://localhost:8082";
+
 const authApi = axios.create({
-  baseURL: "http://localhost:8082",
+  baseURL: AUTH_API_BASE_URL,
 });
 
 authApi.interceptors.request.use((config) => {

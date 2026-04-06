@@ -128,8 +128,10 @@ export function attachRefreshInterceptor(axiosInstance: AxiosInstance) {
       try {
         // Use a plain axios call (not the instance) so we don't create interceptor loops.
         // Absolute URL so it works regardless of the instance's baseURL.
+        const refreshBaseUrl =
+          import.meta.env.VITE_AUTH_API_BASE_URL ?? "http://localhost:8082";
         const refreshResponse = await axios.post<RefreshResponse>(
-          "http://localhost:8082/auth/refresh",
+          `${refreshBaseUrl}/auth/refresh`,
           {
             refreshToken,
           },
