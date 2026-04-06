@@ -89,10 +89,12 @@ func (h *Hub) Run(kafkaProducer *messages.KafkaProducer) {
 
 				// Close the old outbound channel if it's still open.
 				// (WritePump will exit once the channel closes.)
-				func() {
-					defer func() { recover() }()
-					close(existing.OutboundChannel)
-				}()
+				if existing, ok := h.ClientMap[client.ClientId]; ok && existing != nil {
+					func() {
+						defer func() { recover() }()
+						close(existing.OutboundChannel)
+					}()
+				}
 			}
 
 			h.ClientMap[client.ClientId] = client
@@ -137,7 +139,7 @@ func (h *Hub) Run(kafkaProducer *messages.KafkaProducer) {
 			)
 
 			for _, op := range h.DocumentState.Operations[channelData.Version:] {
-				incomingOperation = engine.PerformTransformation(incomingOperation, op)
+				incomingOperation = engine.PerformTransformation(op, incomingOperation)
 			}
 
 			log.Printf(
