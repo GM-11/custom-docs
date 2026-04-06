@@ -28,7 +28,7 @@ public class Snapshot {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
-    private String id;
+    private UUID id;
 
     @Column(name = "document_id", nullable = false)
     private UUID documentId;
