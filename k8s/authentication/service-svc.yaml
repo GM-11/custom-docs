@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: authentication-service
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: authentication-service
   ports:
