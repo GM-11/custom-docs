@@ -52,6 +52,7 @@ public class DocumentControler {
             documentService.grantAccess(request.getDocumentId(), request.getUserEmail(), request.getOwnerId());
             return ResponseEntity.ok().build();
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(500).build();
         }
     }
