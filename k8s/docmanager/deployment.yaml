@@ -17,6 +17,7 @@ spec:
       containers:
         - name: docmanager-service
           image: customdocsregistry.azurecr.io/docmanager:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8081
               name: http
@@ -40,7 +41,7 @@ spec:
                 configMapKeyRef:
                   name: customdocs-config
                   key: DOCMANAGER_DB_URL
-            - name: KAFKA_BROKER
+            - name: KAFKA_SERVER
               valueFrom:
                 configMapKeyRef:
                   name: customdocs-config

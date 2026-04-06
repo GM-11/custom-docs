@@ -27,6 +27,7 @@ spec:
       containers:
         - name: authentication-service
           image: customdocsregistry.azurecr.io/authentication:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8082
               name: http

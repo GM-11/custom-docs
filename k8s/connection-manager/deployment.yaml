@@ -22,17 +22,18 @@ spec:
       containers:
         - name: connection-manager-service
           image: customdocsregistry.azurecr.io/connection-manager:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
               name: http
               protocol: TCP
           env:
-            - name: KAFKA_BROKER
+            - name: KAFKA_ADDRESS
               valueFrom:
                 configMapKeyRef:
                   name: customdocs-config
                   key: KAFKA_BROKER
-            - name: GRPC_ENDPOINT
+            - name: GRPC_URL
               valueFrom:
                 configMapKeyRef:
                   name: customdocs-config
