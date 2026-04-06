@@ -12,11 +12,11 @@ import {
   OT_INSERT,
 } from "../utils/slateOtBridge";
 import { useAuth } from "../hooks/authHook";
-import docApi from "../api/docApi";
 import type { CustomElement } from "../types/slate";
 
 // Import the type augmentation so Slate's generics are properly typed
 import "../types/slate";
+import docManagerApi from "../api/docManagerApi";
 
 type Status = "connecting" | "connected" | "disconnected";
 
@@ -86,8 +86,10 @@ export default function Editor() {
 
     setStatus("connecting");
 
+    const wsBase = import.meta.env.VITE_WS_BASE_URL ?? "ws://localhost:8080";
+
     const ws = new WebSocket(
-      `ws://localhost:8080/ws?token=${accessToken}&hubId=${docId}`,
+      `${wsBase.replace(/\/$/, "")}/ws?token=${accessToken}&hubId=${docId}`,
     );
     wsRef.current = ws;
 
@@ -268,7 +270,8 @@ export default function Editor() {
     setGrantSuccess(null);
 
     try {
-      await docApi.put("/access", {
+      console.log({ documentId: docId, userEmail: email, ownerId: user.id });
+      await docManagerApi.put("/documents/access", {
         documentId: docId,
         userEmail: email,
         ownerId: user.id,
