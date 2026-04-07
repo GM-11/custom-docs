@@ -347,6 +347,36 @@ textarea:focus {
     background: var(--page-bg);
 }
 
+/* Ensure auth layout is centered and padded on small screens */
+@media (max-width: 640px) {
+    .auth-shell .container {
+        padding-inline: 1.25rem;
+        padding-block: 1.75rem;
+    }
+
+    .auth-card {
+        padding: 1.75rem 1.5rem;
+        box-shadow:
+            0 14px 32px rgba(0, 0, 0, 0.55),
+            0 0 0 1px rgba(0, 0, 0, 0.35);
+    }
+
+    .tabs {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .tab {
+        margin-right: 0;
+        flex: 1 1 0;
+        text-align: center;
+    }
+
+    .inputs-group {
+        gap: 0.65rem;
+    }
+}
+
 .auth-card {
     background: var(--surface);
     border-radius: 0.75rem;
@@ -378,8 +408,88 @@ textarea:focus {
     align-items: flex-start;
 }
 
+/* Stack sidebar and main content on smaller screens */
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1.25rem 1.1rem;
+        border-radius: 0.75rem;
+    }
+
+    .dashboard-main {
+        margin-top: 0.5rem;
+    }
+}
+
+/* Tighter padding and reduced gaps on very small screens */
+@media (max-width: 640px) {
+    .dashboard-shell .container {
+        padding-inline: 1.25rem;
+        padding-block: 1.5rem;
+    }
+
+    .dashboard-grid {
+        gap: 1.25rem;
+    }
+
+    .dashboard-main header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.9rem;
+    }
+
+    .dashboard-main header>.flex.items-center {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .dashboard-main h1 {
+        font-size: 1.2rem;
+        max-width: 100%;
+        word-break: break-word;
+    }
+
+    .dashboard-main .small-print {
+        font-size: 0.7rem;
+        letter-spacing: 0.14em;
+    }
+
+    .documents-list {
+        gap: 0.9rem;
+    }
+
+    .document-card {
+        padding: 1rem 1.1rem;
+    }
+}
+
 .dashboard-main {
     background: transparent;
+}
+
+/* Dashboard typography tweaks for smaller screens */
+@media (max-width: 480px) {
+    .dashboard-main h1 {
+        font-size: 1.05rem;
+    }
+
+    .dashboard-main .small-print {
+        font-size: 0.68rem;
+        letter-spacing: 0.14em;
+    }
+
+    .document-card-title {
+        font-size: 0.95rem;
+    }
+
+    .document-card-meta {
+        font-size: 0.72rem;
+    }
 }
 
 /* Document list cards */
@@ -446,6 +556,53 @@ textarea:focus {
     backdrop-filter: blur(10px);
 }
 
+/* Make top bar content wrap nicely on narrow viewports */
+@media (max-width: 768px) {
+    .editor-top-bar {
+        padding-inline: 1.25rem;
+        padding-block: 0.7rem;
+        flex-wrap: wrap;
+        row-gap: 0.5rem;
+    }
+
+    .editor-top-bar>div:first-child {
+        order: 1;
+    }
+
+    .editor-top-bar .title {
+        order: 3;
+        flex-basis: 100%;
+        text-align: left;
+        margin-top: 0.25rem;
+    }
+
+    .editor-top-bar>div:last-child {
+        order: 2;
+        margin-left: auto;
+    }
+
+    /* The inline grant input row has a fixed min-width; relax it on mobile */
+    .editor-top-bar input[placeholder="User email…"] {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .editor-top-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .editor-top-bar>div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .status-text {
+        margin-top: 0.4rem;
+    }
+}
+
 .editor-top-bar .title {
     font-family: var(--font-display);
     font-size: 1.1rem;
@@ -480,9 +637,47 @@ textarea:focus {
     padding: 2.5rem 4rem;
 }
 
+/* Tablet: slightly tighter paddings */
 @media (max-width: 900px) {
+    .editor-page-wrapper {
+        margin: 2rem auto;
+        padding-inline: 1.25rem;
+    }
+
     .editor-page {
         padding: 1.75rem 1.75rem;
+    }
+}
+
+/* Small screens: edge-to-edge feel with comfortable padding */
+@media (max-width: 640px) {
+    .editor-main {
+        padding-top: 1.1rem;
+        padding-bottom: 2.25rem;
+    }
+
+    .editor-page-wrapper {
+        margin: 1.5rem auto;
+        padding-inline: 1rem;
+    }
+
+    .editor-page {
+        border-radius: 0.9rem;
+        padding: 1.4rem 1.25rem;
+        box-shadow:
+            0 16px 48px rgba(0, 0, 0, 0.75),
+            0 0 0 1px rgba(0, 0, 0, 0.12);
+    }
+}
+
+/* Very small screens */
+@media (max-width: 420px) {
+    .editor-page-wrapper {
+        padding-inline: 0.75rem;
+    }
+
+    .editor-page {
+        padding: 1.2rem 1rem;
     }
 }
 
@@ -497,6 +692,14 @@ textarea:focus {
     font-size: 1.05rem;
     line-height: 2;
     color: #1C1917;
+}
+
+/* Slightly smaller type on narrow screens so more content fits */
+@media (max-width: 640px) {
+    .editor-area {
+        font-size: 0.98rem;
+        line-height: 1.9;
+    }
 }
 
 /* Utility */

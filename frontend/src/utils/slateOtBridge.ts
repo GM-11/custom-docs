@@ -152,7 +152,8 @@ export function slateOpToOT(
     };
   }
 
-  // Ignore all other Slate operation types (set_selection, set_node, etc.)
+  // Ignore all non-text operations so formatting / alignment changes are kept
+  // local in Slate and never sent through OT. We only ever send insert/delete.
   return null;
 }
 

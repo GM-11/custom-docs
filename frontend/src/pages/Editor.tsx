@@ -21,11 +21,13 @@ import docManagerApi from "../api/docManagerApi";
 type Status = "connecting" | "connected" | "disconnected";
 
 const EMPTY_DOC: CustomElement[] = [
-  { type: "paragraph", children: [{ text: "" }] },
+  { type: "paragraph", align: "left", children: [{ text: "" }] },
 ];
 
 function contentToSlateValue(content: string): CustomElement[] {
-  return [{ type: "paragraph", children: [{ text: content }] }];
+  // Treat content as plain text and keep the backend format as-is.
+  // We display it in a single paragraph; formatting is kept purely on the client.
+  return [{ type: "paragraph", align: "left", children: [{ text: content }] }];
 }
 
 function statusLabel(status: Status): string {

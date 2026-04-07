@@ -4,6 +4,7 @@
 
 export type CustomElement = {
   type: "paragraph";
+  align?: "left" | "center" | "right";
   children: CustomText[];
 };
 
