@@ -35,4 +35,4 @@ build/
 *properties
 *yaml
 .zed
-.env
+.env*
