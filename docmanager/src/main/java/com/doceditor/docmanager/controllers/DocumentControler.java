@@ -8,8 +8,11 @@ import com.doceditor.docmanager.controllers.dto.NewDocumentRequest;
 import com.doceditor.docmanager.entity.Documents;
 import com.doceditor.docmanager.services.DocumentService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,8 +30,13 @@ public class DocumentControler {
     private DocumentService documentService;
 
     @PostMapping()
-    public ResponseEntity<String> createDocument(@RequestBody NewDocumentRequest request) {
+    public ResponseEntity<String> createDocument(
+            @RequestBody NewDocumentRequest request,
+            @AuthenticationPrincipal String callerId) {
         try {
+            if (callerId == null || !callerId.equals(request.getUserId())) {
+                return ResponseEntity.status(403).build();
+            }
             String newDocId = documentService.createNewDocument(request.getUserId(), request.getTitle());
             return ResponseEntity.ok(newDocId);
         } catch (Exception e) {
@@ -37,8 +45,13 @@ public class DocumentControler {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<Documents>> getUserDocuments(@PathVariable String userId) {
+    public ResponseEntity<List<Documents>> getUserDocuments(
+            @PathVariable String userId,
+            @AuthenticationPrincipal String callerId) {
         try {
+            if (callerId == null || !callerId.equals(userId)) {
+                return ResponseEntity.status(403).build();
+            }
             return ResponseEntity.ok(documentService.getUserDocuments(userId));
         } catch (Exception e) {
             e.printStackTrace();
@@ -47,9 +60,23 @@ public class DocumentControler {
     }
 
     @PutMapping("/access")
-    public ResponseEntity<String> grantAccessToDocument(@RequestBody GrantAccessRequest request) {
+    public ResponseEntity<String> grantAccessToDocument(
+            @RequestBody GrantAccessRequest request,
+            @AuthenticationPrincipal String callerId,
+            HttpServletRequest httpRequest) {
         try {
-            documentService.grantAccess(request.getDocumentId(), request.getUserEmail(), request.getOwnerId());
+            if (callerId == null || !callerId.equals(request.getOwnerId())) {
+                return ResponseEntity.status(403).build();
+            }
+
+            String authHeader = httpRequest.getHeader("Authorization");
+
+            documentService.grantAccess(
+                    request.getDocumentId(),
+                    request.getUserEmail(),
+                    request.getOwnerId(),
+                    authHeader);
+
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             e.printStackTrace();
