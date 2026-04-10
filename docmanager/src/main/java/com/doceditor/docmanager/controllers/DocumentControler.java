@@ -85,9 +85,16 @@ public class DocumentControler {
     }
 
     @GetMapping("/access")
-    public ResponseEntity<CheckAccessResponse> checkDocumentAccess(@RequestParam String documentId,
-            @RequestParam String userId) {
+    public ResponseEntity<CheckAccessResponse> checkDocumentAccess(
+            @RequestParam String documentId,
+            @RequestParam String userId,
+            @AuthenticationPrincipal String callerId) {
         try {
+
+            if (callerId == null || !callerId.equals(userId)) {
+                return ResponseEntity.status(403).build();
+            }
+
             Boolean accessInfo = documentService.checkDocumentAccess(documentId, userId);
             return ResponseEntity.ok(new CheckAccessResponse(accessInfo));
         } catch (Exception e) {
