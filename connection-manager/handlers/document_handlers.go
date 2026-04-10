@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -22,12 +23,14 @@ func CreateNewDocumentHandler(manager *models.HubManager) func(w http.ResponseWr
 	return func(w http.ResponseWriter, r *http.Request) {
 		clientId := r.Context().Value(auth.UserIdKey).(string)
 		title := r.URL.Query().Get("title")
+		authHeader := r.Header.Get("Authorization")
+
 		if clientId == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"error": "clientId is required"})
 			return
 		}
-		hubId, err := manager.CreateNewDocument(clientId, title)
+		hubId, err := manager.CreateNewDocument(clientId, title, authHeader)
 		if err != nil {
 			log.Println("Error creating new document:", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -42,7 +45,11 @@ func ConnectToDocumentHandler(manager *models.HubManager) func(w http.ResponseWr
 	return func(w http.ResponseWriter, r *http.Request) {
 		clientId := r.Context().Value(auth.UserIdKey).(string)
 		hubId := r.URL.Query().Get("hubId")
-
+		token := r.URL.Query().Get("token")
+		authHeader := ""
+		if token != "" {
+			authHeader = fmt.Sprintf("Bearer %s", token)
+		}
 		log.Printf("WS connect attempt: clientId=%s hubId=%s origin=%s remote=%s", clientId, hubId, r.Header.Get("Origin"), r.RemoteAddr)
 
 		if clientId == "" || hubId == "" {
@@ -52,7 +59,8 @@ func ConnectToDocumentHandler(manager *models.HubManager) func(w http.ResponseWr
 			return
 		}
 
-		hasAccess, err := docmanagercomm.CheckAccessRequest(hubId, clientId)
+		hasAccess, err := docmanagercomm.CheckAccessRequest(hubId, clientId, authHeader)
+
 		if err != nil {
 			log.Printf("WS connect rejected (access check error): clientId=%s hubId=%s err=%v", clientId, hubId, err)
 			w.WriteHeader(http.StatusForbidden)

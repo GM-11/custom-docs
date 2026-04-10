@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func CreateDocumentRequest(title, clientId string) (string, error) {
+func CreateDocumentRequest(title, clientId, authHeader string) (string, error) {
 	docManagerEndpoint := os.Getenv("DOCMANAGER_SERVICE_ENDPOINT")
 	body, err := json.Marshal(map[string]any{
 		"title":  title,
@@ -21,11 +21,17 @@ func CreateDocumentRequest(title, clientId string) (string, error) {
 	}
 	url := fmt.Sprintf("%s/documents", docManagerEndpoint)
 	fmt.Printf("Sending POST request to %s with body: %s\n", url, string(body))
-	res, err := http.Post(
-		url,
-		"application/json",
-		bytes.NewBuffer(body),
-	)
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if strings.TrimSpace(authHeader) != "" {
+		req.Header.Set("Authorization", authHeader)
+	}
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to create document: %w", err)
 	}

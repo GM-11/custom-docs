@@ -21,11 +21,11 @@ type HubManager struct {
 	recoveryLocks map[string]*sync.Mutex
 }
 
-func (manager *HubManager) CreateNewDocument(clientId, title string) (string, error) {
+func (manager *HubManager) CreateNewDocument(clientId, title, authHeader string) (string, error) {
 	fmt.Printf("Creating new document with title: %s for clientId: %s\n", title, clientId)
 	manager.mu.Lock()
 
-	createdHubId, err := docmanagercomm.CreateDocumentRequest(title, clientId)
+	createdHubId, err := docmanagercomm.CreateDocumentRequest(title, clientId, authHeader)
 	if err != nil {
 		return "", fmt.Errorf("failed to create document: %w", err)
 	}
