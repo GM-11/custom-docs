@@ -1,6 +1,11 @@
 package com.doceditor.docmanager.services;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,6 +25,8 @@ import com.doceditor.docmanager.repository.DocumentsAccessRepository;
 import com.doceditor.docmanager.repository.DocumentsRepository;
 import com.doceditor.docmanager.repository.OperationRepository;
 import com.doceditor.docmanager.repository.SnapshotRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +36,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class DocumentService {
+
+    @Value("${spring.env.auth-url}")
+    private String authUrl;
 
     @Autowired
     private DocumentsRepository documentsRepository;
@@ -66,14 +76,101 @@ public class DocumentService {
         return documentId.toString();
     }
 
-    public String grantAccess(String documentId, String userId, String ownerId) {
-        if (!documentsAccessRepository.userIsOwnerOfDocument(UUID.fromString(documentId), UUID.fromString(ownerId))) {
+    public String grantAccess(String documentId, String userEmail, String ownerId, String authHeader) {
+        UUID documentUuid;
+        UUID ownerUuid;
+
+        try {
+            documentUuid = UUID.fromString(documentId);
+            ownerUuid = UUID.fromString(ownerId);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Invalid UUID format for documentId {} or ownerId {}", documentId, ownerId, e);
+            return "Invalid documentId or ownerId";
+        }
+
+        // 1. Check that owner is indeed the owner of the document
+        boolean isOwner = documentsAccessRepository.userIsOwnerOfDocument(documentUuid, ownerUuid);
+        if (!isOwner) {
             logger.warn("User {} is not owner of document {}", ownerId, documentId);
             return "User does not have permission to grant access";
         }
 
+        String userId = null;
+
+        try {
+            // 2. Fetch user id from auth service by userEmail
+            URL url = URI.create(authUrl + "/auth/id?userEmail=" + userEmail).toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            try {
+                conn.setRequestMethod("GET");
+                conn.setDoOutput(false);
+                conn.setRequestProperty("Accept", "application/json");
+
+                // Forward the caller's bearer token so /auth/id is not publicly enumerable
+                if (authHeader != null && !authHeader.isBlank()) {
+                    conn.setRequestProperty("Authorization", authHeader);
+                }
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode >= 400) {
+                    logger.warn("Auth request returned {} for document {} and userEmail {}", responseCode,
+                            documentId, userEmail);
+                }
+
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder responseBuilder = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        responseBuilder.append(line);
+                    }
+
+                    String responseBody = responseBuilder.toString();
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode root = mapper.readTree(responseBody);
+                        JsonNode userIdNode = root.get("userId");
+                        if (userIdNode != null && !userIdNode.isNull()) {
+                            userId = userIdNode.asText();
+                        } else {
+                            logger.warn(
+                                    "userId field missing or null in auth response for document {} and userEmail {}. Response body: {}",
+                                    documentId, userEmail, responseBody);
+                        }
+                    } catch (Exception jsonEx) {
+                        logger.error(
+                                "Failed to parse auth service JSON response for document {} and userEmail {}. Response body: {}",
+                                documentId, userEmail, responseBody, jsonEx);
+                    }
+                } catch (Exception ioEx) {
+                    logger.error("Error reading auth service response for document {} and userEmail {}", documentId,
+                            userEmail, ioEx);
+                }
+            } finally {
+                conn.disconnect();
+            }
+        } catch (Exception e) {
+            logger.error("Error calling auth service for grantAccess: document={}, userEmail={}, owner={}",
+                    documentId, userEmail, ownerId, e);
+        }
+
+        if (userId == null || userId.isEmpty()) {
+            logger.warn("Auth service did not return a valid userId for document {} and userEmail {}",
+                    documentId, userEmail);
+            return "Failed to resolve userId from auth service";
+        }
+
+        // 3. Create document access for resolved userId and the document
+        UUID userUuid;
+        try {
+            userUuid = UUID.fromString(userId);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Auth service returned invalid userId {} for userEmail {}", userId, userEmail, e);
+            return "Auth service returned invalid userId";
+        }
+
         DocumentAccess access = new DocumentAccess(
-                new DocumentAccessEmbeddedClass(UUID.fromString(documentId), UUID.fromString(userId)), "editor");
+                new DocumentAccessEmbeddedClass(documentUuid, userUuid), "editor");
         documentsAccessRepository.save(access);
         return "Access granted successfully";
     }
