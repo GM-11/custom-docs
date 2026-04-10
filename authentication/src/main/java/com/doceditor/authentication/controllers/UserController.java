@@ -10,9 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
@@ -22,6 +24,9 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+
+    // init logger
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserController.class);
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -46,6 +51,13 @@ public class UserController {
     public ResponseEntity<Void> logout(@AuthenticationPrincipal String userId) {
         userService.logout(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/id")
+    public ResponseEntity<Map<String, String>> getUserIdByEmail(@RequestParam String userEmail) {
+        String userId = userService.getUserIdByEmail(userEmail);
+        logger.info("Retrieved userId {} for email {}", userId, userEmail);
+        return ResponseEntity.ok(Map.of("userId", userId));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
