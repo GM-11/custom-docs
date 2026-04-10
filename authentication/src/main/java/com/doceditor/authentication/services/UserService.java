@@ -88,4 +88,14 @@ public class UserService {
 
         refreshTokenService.revokeByUserId(userId);
     }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
+    public String getUserIdByEmail(String email) {
+        return userRepository.findUserIdByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
 }
