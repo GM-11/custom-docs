@@ -11,9 +11,13 @@ const docManagerApi = axios.create({
 
 docManagerApi.interceptors.request.use((config) => {
   const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+
+    config.headers = config.headers ?? {};
+    (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
