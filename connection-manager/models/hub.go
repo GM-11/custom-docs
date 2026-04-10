@@ -23,6 +23,16 @@ type Hub struct {
 	Done            chan struct{}
 }
 
+func safeSend(ch chan ChannelData, data ChannelData) (closed bool) {
+	defer func() {
+		if recover() != nil {
+			closed = true
+		}
+	}()
+	ch <- data
+	return false
+}
+
 func coerceOperationData(op *engine.Operation) {
 	if op == nil {
 		return
@@ -244,7 +254,9 @@ func (h *Hub) Run(kafkaProducer *messages.KafkaProducer) {
 					incomingOperation.Data,
 				)
 
-				client.OutboundChannel <- out
+				if safeSend(client.OutboundChannel, out) {
+					delete(h.ClientMap, client.ClientId)
+				}
 			}
 
 			h.DocumentState.Operations = append(h.DocumentState.Operations, incomingOperation)
