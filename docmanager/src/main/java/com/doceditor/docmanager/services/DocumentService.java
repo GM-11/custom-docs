@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DocumentService {
 
-    @Value("${spring.env.auth-url}")
+    @Value("${auth.service-url}")
     private String authUrl;
 
     @Autowired
